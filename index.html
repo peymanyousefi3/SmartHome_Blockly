@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Smart-Home Blockly → Python</title>
+
+  <script src="https://unpkg.com/blockly@11.2.0/blockly_compressed.js"></script>
+  <script src="https://unpkg.com/blockly@11.2.0/blocks_compressed.js"></script>
+  <script src="https://unpkg.com/blockly@11.2.0/python_compressed.js"></script>
+  <script src="https://unpkg.com/blockly@11.2.0/msg/en.js"></script>
+
+  <style>
+    html,body {height:100%;margin:0;display:flex;flex-direction:column;}
+    #blocklyDiv {flex:1 1 auto;}
+    #bar {padding:8px;background:#f6f6f6;border-top:1px solid #ccc;}
+    textarea {width:100%;height:9rem;font:14px/1.4 monospace;white-space:pre;}
+  </style>
+</head>
+<body>
+  <div id="blocklyDiv"></div>
+
+  <!-- Controls -->
+  <div id="bar">
+    <button id="gen">Generate Python</button>
+    <button id="download">Download .py</button>
+    <button id="saveBlocks">Save Blocks</button>
+    <button id="loadBlocks">Load Blocks</button>
+    <input type="file" id="fileInput" accept=".xml" style="display:none" />
+  </div>
+  <textarea id="out" readonly># code appears here…</textarea>
+
+<script>
+/* ───────────── TOOLBOX ───────────── */
+const toolbox = {
+  "kind": "categoryToolbox",
+  "contents": [
+    /* U14Robot FIRST */
+    {"kind":"category","name":"U14Robot","colour":"230",
+     "contents":[
+       {"kind":"block","type":"u14robot_init"},
+       {"kind":"block","type":"u14robot_main_loop"},
+       {"kind":"block","type":"u14robot_move"},
+       {"kind":"block","type":"u14robot_sensor"},
+       {"kind":"block","type":"u14robot_compass"},
+       {"kind":"block","type":"u14robot_room"},
+       {"kind":"block","type":"u14robot_rooms"},
+       {"kind":"block","type":"u14robot_compass_correct"},
+       {"kind":"block","type":"u14robot_debug"},
+       {"kind":"block","type":"u14robot_duration"}]},
+
+    {"kind":"sep"},
+
+    {"kind":"category","name":"Logic","colour":"%{BKY_LOGIC_HUE}",
+     "contents":[
+       {"kind":"block","type":"controls_if"},
+       {"kind":"block","type":"logic_compare"},
+       {"kind":"block","type":"logic_operation"},
+       {"kind":"block","type":"logic_negate"},
+       {"kind":"block","type":"logic_boolean"},
+       {"kind":"block","type":"logic_null"},
+       {"kind":"block","type":"logic_ternary"}]},
+
+    {"kind":"category","name":"Loops","colour":"%{BKY_LOOPS_HUE}",
+     "contents":[
+       {"kind":"block","type":"controls_repeat_ext"},
+       {"kind":"block","type":"controls_whileUntil"},
+       {"kind":"block","type":"controls_for"},
+       {"kind":"block","type":"controls_forEach"},
+       {"kind":"block","type":"controls_flow_statements"}]},
+
+    {"kind":"category","name":"Math","colour":"%{BKY_MATH_HUE}",
+     "contents":[
+       {"kind":"block","type":"math_number"},
+       {"kind":"block","type":"math_arithmetic"},
+       {"kind":"block","type":"math_single"},
+       {"kind":"block","type":"math_trig"},
+       {"kind":"block","type":"math_constant"},
+       {"kind":"block","type":"math_number_property"},
+       {"kind":"block","type":"math_round"},
+       {"kind":"block","type":"math_on_list"},
+       {"kind":"block","type":"math_modulo"},
+       {"kind":"block","type":"math_constrain"},
+       {"kind":"block","type":"math_random_int"},
+       {"kind":"block","type":"math_random_float"}]},
+
+    {"kind":"category","name":"Text","colour":"%{BKY_TEXTS_HUE}",
+     "contents":[
+       {"kind":"block","type":"text"},
+       {"kind":"block","type":"text_join"},
+       {"kind":"block","type":"text_append"},
+       {"kind":"block","type":"text_length"},
+       {"kind":"block","type":"text_isEmpty"},
+       {"kind":"block","type":"text_indexOf"},
+       {"kind":"block","type":"text_charAt"},
+       {"kind":"block","type":"text_getSubstring"},
+       {"kind":"block","type":"text_changeCase"},
+       {"kind":"block","type":"text_trim"},
+       {"kind":"block","type":"text_print"}]},
+
+    {"kind":"category","name":"Lists","colour":"%{BKY_LISTS_HUE}",
+     "contents":[
+       {"kind":"block","type":"lists_create_empty"},
+       {"kind":"block","type":"lists_create_with"},
+       {"kind":"block","type":"lists_repeat"},
+       {"kind":"block","type":"lists_length"},
+       {"kind":"block","type":"lists_isEmpty"},
+       {"kind":"block","type":"lists_indexOf"},
+       {"kind":"block","type":"lists_getIndex"},
+       {"kind":"block","type":"lists_setIndex"},
+       {"kind":"block","type":"lists_getSublist"},
+       {"kind":"block","type":"lists_split"},
+       {"kind":"block","type":"lists_sort"}]},
+
+    {"kind":"sep"},
+    {"kind":"category","name":"Variables","custom":"VARIABLE",
+     "colour":"%{BKY_VARIABLES_HUE}"},
+    {"kind":"category","name":"Functions","custom":"PROCEDURE",
+     "colour":"%{BKY_PROCEDURE_HUE}"}
+  ]
+};
+
+/* ───────────── BLOCK DEFINITIONS ───────────── */
+Blockly.defineBlocksWithJsonArray([
+  /* robot = U14Robot("Team") */
+  {
+    "type":"u14robot_init",
+    "message0":"create U14Robot named %1",
+    "args0":[{"type":"field_input","name":"TEAM","text":"Team"}],
+    "previousStatement":null,"nextStatement":null,"colour":230
+  },
+
+  /* while robot.step() != -1: ... */
+  {
+    "type":"u14robot_main_loop",
+    "message0":"Repeat",
+    "message1":"do %1",
+    "args1":[{"type":"input_statement","name":"DO"}],
+    "previousStatement":null,"nextStatement":null,"colour":230
+  },
+
+  /* robot.move(left, right) with embedded numbers */
+  {
+    "type":"u14robot_move",
+    "message0":"move left %1   right %2",
+    "args0":[
+      {"type":"field_number","name":"LEFT","value":0},
+      {"type":"field_number","name":"RIGHT","value":0}
+    ],
+    "previousStatement":null,"nextStatement":null,"colour":230
+  },
+
+  /* robot.<sensor>() */
+  {
+    "type":"u14robot_sensor",
+    "message0":"Distance %1",
+    "args0":[{"type":"field_dropdown","name":"SENSOR","options":[
+      ["Front","Front"],["FrontRight","FrontRight"],["Right","Right"],
+      ["BackRight","BackRight"],["Back","Back"],["BackLeft","BackLeft"],
+      ["Left","Left"],["FrontLeft","FrontLeft"]]}],
+    "output":"Number","colour":230
+  },
+
+  /* robot.Compass */
+  {
+    "type":"u14robot_compass",
+    "message0":"Compass",
+    "output":"Number","colour":230
+  },
+
+  /* robot.CurrentRoom */
+  {
+    "type":"u14robot_room",
+    "message0":"Current Room",
+    "output":"Number","colour":230
+  },
+
+  /* robot.Rooms */
+  {
+    "type":"u14robot_rooms",
+    "message0":"Rooms",
+    "output": null,"colour":230
+  },
+
+  /* robot.compass_correction() */
+  {
+    "type":"u14robot_compass_correct",
+    "message0":"Angle Correct %1",
+    "args0":[{"type":"input_value","name":"ANGLE","value":0}],
+    "output":"Number","colour":230
+  },
+
+  /* robot.debug_print() */
+  {
+    "type":"u14robot_debug",
+    "message0":"Debug",
+    "previousStatement":null,"nextStatement":null,"colour":230
+  },
+
+  /* duration */
+  {
+    "type":"u14robot_duration",
+    "message0":"duration %1",
+    "args0":[
+      {"type":"field_number","name":"DURATION","value":0}
+    ],
+    "previousStatement":null,"nextStatement":null,"colour":230
+  }
+]);
+
+/* ───────────── GENERATORS ───────────── */
+python.pythonGenerator.forBlock['u14robot_init'] = (b, gen) => {
+  const team = b.getFieldValue('TEAM');
+  gen.definitions_.import_u14 =
+      'from smarthome_utils.U14Robot import U14Robot';
+  gen.definitions_.import_random = 'import random';
+  gen.definitions_.var_duration = 'duration = 0';
+  return `robot = U14Robot("${team}")\n`;
+};
+
+python.pythonGenerator.forBlock['u14robot_main_loop'] = (b, gen) => {
+  let body = gen.statementToCode(b,'DO');
+  if (!body.trim()) body = gen.INDENT + 'pass\n';
+  return `while robot.step() != -1:\n` + gen.INDENT + `if duration > 0:\n` + gen.INDENT + gen.INDENT + `duration -= 1\n` + gen.INDENT +gen.INDENT + `continue\n` + body;
+};
+
+python.pythonGenerator.forBlock['u14robot_move'] = (b) => {
+  const left  = b.getFieldValue('LEFT');
+  const right = b.getFieldValue('RIGHT');
+  return `robot.move(${left}, ${right})\n`;
+};
+
+python.pythonGenerator.forBlock['u14robot_sensor'] = (b) => {
+  const s = b.getFieldValue('SENSOR');
+  return [`robot.${s}`, python.pythonGenerator.ORDER_FUNCTION_CALL];
+};
+
+python.pythonGenerator.forBlock['u14robot_duration'] = (b) => {
+  const dur  = b.getFieldValue('DURATION');
+  return `duration = ${dur}\n`;
+};
+
+python.pythonGenerator.forBlock['u14robot_compass'] = (b) => {
+  return [`robot.Compass`, python.pythonGenerator.ORDER_FUNCTION_CALL];
+};
+
+python.pythonGenerator.forBlock['u14robot_room'] = (b) => {
+  return [`robot.CurrentRoom`, python.pythonGenerator.ORDER_FUNCTION_CALL];
+};
+
+python.pythonGenerator.forBlock['u14robot_rooms'] = (b) => {
+  return [`robot.Rooms`, python.pythonGenerator.ORDER_FUNCTION_CALL];
+};
+
+python.pythonGenerator.forBlock['u14robot_compass_correct'] = (b, gen) => {
+  const angle = gen.valueToCode(b, 'ANGLE', gen.ORDER_NONE) || '0';
+  return [`robot.compass_correction(${angle})`,
+          python.pythonGenerator.ORDER_FUNCTION_CALL];
+};
+
+python.pythonGenerator.forBlock['u14robot_debug'] = (b) => {
+  return `robot.debug_print()\n`;
+};
+
+/* ───────────── BOOTSTRAP ───────────── */
+let workspace;
+window.addEventListener('load', () => {
+  workspace = Blockly.inject('blocklyDiv', {toolbox});
+});
+
+function makeCode() {
+  return python.pythonGenerator.workspaceToCode(workspace)
+         || '# (workspace is empty)\n';
+}
+
+document.getElementById('gen').onclick = () =>
+  document.getElementById('out').value = makeCode();
+
+document.getElementById('download').onclick = () => {
+  const blob = new Blob([makeCode()], {type:'text/x-python'});
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(blob),
+    download:'smarthome_program.py'
+  });
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+document.getElementById('saveBlocks').onclick = () => {
+  const xmlDom  = Blockly.Xml.workspaceToDom(workspace);
+  const xmlText = Blockly.Xml.domToPrettyText(xmlDom);
+  const blob    = new Blob([xmlText], {type:'text/xml'});
+  const url     = URL.createObjectURL(blob);
+  const a       = document.createElement('a');
+  a.href        = url;
+  a.download    = 'blocks.xml';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+
+// --- Load blocks from XML ---
+document.getElementById('loadBlocks').onclick = () => {
+  document.getElementById('fileInput').click();
+};
+document.getElementById('fileInput').onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    // use the new XML util
+    const xmlDom = Blockly.utils.xml.textToDom(reader.result);
+    workspace.clear();
+    Blockly.Xml.domToWorkspace(xmlDom, workspace);
+  };
+  reader.readAsText(file);
+};
+</script>
+</body>
+</html>
